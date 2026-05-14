@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Budget Achievement</title>
+<script src="https://cdn.jsdelivr.net/gh/tableau/extensions-api/lib/tableau.extensions.1.latest.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --page:#f0f0ec;--card:#fff;--bdr:rgba(0,0,0,0.07);
+  --t1:#0f0f0f;--t2:#5f5f5f;--t3:#aaa;--surf:#f5f5f2;
+  --g:#639922;--g-bg:#eaf3de;--g-hi:#1a3d08;--g-mid:#3b6d11;
+  --r:#e24b4a;--r-bg:#fcebeb;--r-hi:#5c1515;--r-mid:#a32d2d;
+  --a:#ef9f27;--a-bg:#faeeda;--a-hi:#633806;--a-mid:#854f0b;
+  --blue:#378ADD;
+}
+html,body{
+  width:100%;height:100%;background:var(--page);
+  font-family:'Inter',-apple-system,sans-serif;
+  display:flex;align-items:flex-start;justify-content:center;
+  overflow:auto;
+}
+#app{width:calc(100% - 16px);max-width:860px;padding:10px 0 16px;}
+
+/* ── SHELL ── */
+.shell{
+  background:var(--card);border-radius:14px;
+  border:0.5px solid var(--bdr);
+  box-shadow:0 1px 2px rgba(0,0,0,0.04),0 4px 20px rgba(0,0,0,0.07);
+  overflow:hidden;
+  animation:rise .3s cubic-bezier(.22,.68,0,1.15) both;
+}
+@keyframes rise{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+
+/* ── TOP BAR ── */
+.topbar{
+  display:flex;justify-content:space-between;align-items:flex-start;
+  padding:14px 16px 0;gap:12px;flex-wrap:wrap;
+}
+.title-block .ttl{
+  font-size:10px;font-weight:600;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--t2);margin-bottom:2px;
+}
+.title-block .sub{font-size:10.5px;color:var(--t3);}
+
+/* ── TOGGLE GROUP ── */
+.tgl-group{
+  display:flex;gap:3px;background:var(--surf);
+  border-radius:8px;padding:3px;flex-shrink:0;
+}
+.tgl{
+  font-size:10px;font-weight:600;letter-spacing:.03em;
+  padding:4px 11px;border-radius:6px;border:none;
+  cursor:pointer;background:transparent;color:var(--t3);
+  font-family:inherit;transition:all .15s;
+}
+.tgl:hover{color:var(--t2);}
+.tgl.on{background:var(--card);color:var(--t1);box-shadow:0 1px 3px rgba(0,0,0,.09);}
+
+/* ── KPI ROW ── */
+.kpi-row{
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:7px;padding:12px 16px;
+}
+.kpi{background:var(--surf);border-radius:9px;padding:9px 11px;}
+.kpi-l{
+  font-size:8.5px;font-weight:600;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--t3);margin-bottom:4px;
+}
+.kpi-v{
+  font-size:20px;font-weight:600;color:var(--t1);
+  letter-spacing:-0.02em;line-height:1;margin-bottom:2px;
+}
+.kpi-d{font-size:9px;font-weight:500;}
+.kpi-d.g{color:var(--g-mid);} .kpi-d.r{color:var(--r-mid);} .kpi-d.a{color:var(--a-mid);}
+
+/* ── CHART ── */
+.chart-area{padding:0 16px;position:relative;height:220px;}
+.chart-area canvas{border-radius:4px;}
+
+/* ── AXIS STRIP ── */
+.axis-strip{
+  display:flex;justify-content:space-between;
+  padding:4px 16px 0;font-size:8.5px;color:var(--t3);
+}
+
+/* ── LEGEND ── */
+.legend{
+  display:flex;gap:16px;flex-wrap:wrap;
+  padding:10px 16px 14px;
+  border-top:0.5px solid var(--bdr);margin-top:6px;
+}
+.leg{display:flex;align-items:center;gap:5px;font-size:9.5px;color:var(--t2);}
+.leg-sq{width:9px;height:9px;border-radius:2px;flex-shrink:0;}
+
+/* ── PLACEHOLDER ── */
+#ph{
+  padding:40px 20px;text-align:center;
+  display:flex;flex-direction:column;align-items:center;gap:10px;
+}
+#ph svg{opacity:.3;}
+#ph strong{font-size:12px;font-weight:600;color:var(--t2);}
+#ph p{font-size:11px;color:var(--t3);line-height:1.6;}
+.ph-tiles{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:4px;}
+.ph-tile{
+  background:var(--surf);border:0.5px solid var(--bdr);
+  border-radius:6px;padding:3px 10px;
+  font-size:10px;font-weight:500;color:var(--t2);
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="shell" id="shell">
+
+    <!-- placeholder shown before data -->
+    <div id="ph">
+      <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+        <rect x="2" y="2" width="36" height="36" rx="8" stroke="#aaa" stroke-width="1.5"/>
+        <rect x="8" y="22" width="5" height="10" rx="1.5" fill="#aaa"/>
+        <rect x="16" y="16" width="5" height="16" rx="1.5" fill="#aaa"/>
+        <rect x="24" y="10" width="5" height="22" rx="1.5" fill="#aaa"/>
+        <path d="M7 28 L17 18 L25 22 L33 12" stroke="#aaa" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="3,2"/>
+      </svg>
+      <strong>Budget Achievement</strong>
+      <p>Drop fields on the Marks card tiles</p>
+      <div class="ph-tiles">
+        <div class="ph-tile">Actual</div>
+        <div class="ph-tile">Budget / Target</div>
+        <div class="ph-tile">Date</div>
+      </div>
+    </div>
+
+    <!-- chart UI (hidden until data loads) -->
+    <div id="ui" style="display:none">
+      <div class="topbar">
+        <div class="title-block">
+          <div class="ttl" id="chart-title">Budget achievement over time</div>
+          <div class="sub" id="chart-sub">—</div>
+        </div>
+        <div class="tgl-group" id="tgl-group">
+          <button class="tgl" data-w="3">3M</button>
+          <button class="tgl" data-w="6">6M</button>
+          <button class="tgl" data-w="12">1Y</button>
+          <button class="tgl" data-w="36">3Y</button>
+          <button class="tgl on" data-w="0">All</button>
+        </div>
+      </div>
+
+      <div class="kpi-row">
+        <div class="kpi">
+          <div class="kpi-l">Avg attainment</div>
+          <div class="kpi-v" id="k-avg">—</div>
+          <div class="kpi-d" id="k-avg-d"></div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-l">Months on track</div>
+          <div class="kpi-v" id="k-hit">—</div>
+          <div class="kpi-d" id="k-hit-d"></div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-l">Best month</div>
+          <div class="kpi-v" id="k-best">—</div>
+          <div class="kpi-d a" id="k-best-d"></div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-l">Worst month</div>
+          <div class="kpi-v" id="k-worst">—</div>
+          <div class="kpi-d r" id="k-worst-d"></div>
+        </div>
+      </div>
+
+      <div class="chart-area">
+        <canvas id="chart" role="img" aria-label="Budget achievement percentage over time">Budget achievement chart.</canvas>
+      </div>
+      <div class="axis-strip" id="axis-strip"></div>
+
+      <div class="legend">
+        <div class="leg"><div class="leg-sq" style="background:#639922"></div>On/above target (≥100%)</div>
+        <div class="leg"><div class="leg-sq" style="background:#ef9f27"></div>Near target (90–99%)</div>
+        <div class="leg"><div class="leg-sq" style="background:#e24b4a"></div>Below target (&lt;90%)</div>
+        <div class="leg"><div class="leg-sq" style="background:#378ADD"></div>Attainment trend line</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+'use strict';
+(function(){
+
+  var $=function(id){return document.getElementById(id);};
+  var chart=null;
+  var ALL_DATA=[];
+  var activeW=0;
+
+  /* ── number helpers ── */
+  function fmtN(n){
+    if(n===null||isNaN(n)) return '—';
+    var abs=Math.abs(n),s=n<0?'-':'';
+    if(abs>=1e9)  return s+(abs/1e9).toFixed(2)+'B';
+    if(abs>=1e6)  return s+(abs/1e6).toFixed(2)+'M';
+    if(abs>=1000) return s+Math.round(abs).toLocaleString('en-US');
+    return s+abs.toFixed(0);
+  }
+  function p1(n){return Math.round(n*10)/10;}
+
+  /* ── colour per attainment % ── */
+  function barColor(pct,alpha){
+    var a=alpha||1;
+    if(pct>=100) return alpha?'rgba(99,153,34,'+a+')':'#639922';
+    if(pct>=90)  return alpha?'rgba(239,159,39,'+a+')':'#ef9f27';
+    return alpha?'rgba(226,75,74,'+a+')':'#e24b4a';
+  }
+
+  /* ── confirmed working data reader ── */
+  async function getData(ws){
+    var rows=[],reader=await ws.getSummaryDataReaderAsync(undefined,{ignoreSelection:true});
+    for(var i=0;i<reader.pageCount;i++){
+      var pg=await reader.getPageAsync(i);
+      pg.data.forEach(function(r){
+        var row={};
+        pg.columns.forEach(function(c,idx){row[c.fieldName]=r[idx];});
+        rows.push(row);
+      });
+    }
+    await reader.releaseAsync();
+    return rows;
+  }
+
+  async function getEnc(ws){
+    var spec=await ws.getVisualSpecificationAsync(),map={};
+    if(spec.activeMarksSpecificationIndex<0) return map;
+    var marks=spec.marksSpecifications[spec.activeMarksSpecificationIndex];
+    marks.encodings.forEach(function(e){map[e.id]=e.field;});
+    return map;
+  }
+
+  /* ── render chart for a window of N months (0=all) ── */
+  function renderView(w){
+    activeW=w;
+    var d=w===0?ALL_DATA:ALL_DATA.slice(Math.max(0,ALL_DATA.length-w));
+    if(!d.length) return;
+
+    var labels=d.map(function(x){return x.label;});
+    var pcts  =d.map(function(x){return p1(x.pct);});
+    var barBg =pcts.map(function(p){return barColor(p,0.18);});
+    var barBrd=pcts.map(function(p){return barColor(p,0.7);});
+    var ptBg  =pcts.map(function(p){return barColor(p);});
+
+    /* update KPIs */
+    var avg=pcts.reduce(function(s,v){return s+v;},0)/pcts.length;
+    var hits=pcts.filter(function(v){return v>=100;}).length;
+    var best=Math.max.apply(null,pcts);
+    var worst=Math.min.apply(null,pcts);
+    var bestLbl=d[pcts.indexOf(best)].label;
+    var worstLbl=d[pcts.indexOf(worst)].label;
+
+    var avgCls=avg>=100?'g':avg>=90?'a':'r';
+    $('k-avg').textContent=p1(avg)+'%';
+    $('k-avg-d').textContent=(avg>=100?'▲':'▼')+' vs 100% target';
+    $('k-avg-d').className='kpi-d '+avgCls;
+    $('k-hit').textContent=hits+' / '+d.length;
+    $('k-hit-d').textContent=Math.round((hits/d.length)*100)+'% hit rate';
+    $('k-hit-d').className='kpi-d '+(hits/d.length>=0.6?'g':'r');
+    $('k-best').textContent=p1(best)+'%';
+    $('k-best-d').textContent=bestLbl;
+    $('k-worst').textContent=p1(worst)+'%';
+    $('k-worst-d').textContent=worstLbl;
+
+    /* axis strip: first and last label */
+    var strip=$('axis-strip');
+    strip.innerHTML='';
+    var s1=document.createElement('span');s1.textContent=labels[0]||'';
+    var s2=document.createElement('span');s2.textContent=labels[labels.length-1]||'';
+    strip.appendChild(s1);strip.appendChild(s2);
+
+    if(!chart){
+      var ctx=$('chart').getContext('2d');
+      chart=new Chart(ctx,{
+        data:{
+          labels:labels,
+          datasets:[
+            {
+              type:'bar',
+              label:'Attainment',
+              data:pcts,
+              backgroundColor:barBg,
+              borderColor:barBrd,
+              borderWidth:1,
+              borderRadius:4,
+              borderSkipped:false,
+              yAxisID:'y',
+              order:2
+            },
+            {
+              type:'line',
+              label:'Trend',
+              data:pcts,
+              borderColor:'#378ADD',
+              borderWidth:2,
+              pointBackgroundColor:ptBg,
+              pointRadius:3.5,
+              pointBorderColor:'#fff',
+              pointBorderWidth:1.5,
+              tension:0.35,
+              fill:false,
+              yAxisID:'y',
+              order:1
+            }
+          ]
+        },
+        options:{
+          responsive:true,maintainAspectRatio:false,
+          interaction:{mode:'index',intersect:false},
+          plugins:{
+            legend:{display:false},
+            tooltip:{
+              backgroundColor:'rgba(12,12,12,0.88)',
+              titleColor:'#fff',bodyColor:'#ccc',
+              titleFont:{size:11,weight:'600'},
+              bodyFont:{size:10},
+              padding:10,cornerRadius:8,
+              callbacks:{
+                title:function(items){return items[0].label;},
+                label:function(ctx){
+                  if(ctx.datasetIndex===1){
+                    var pv=ctx.raw;
+                    var status=pv>=100?'On Track':pv>=90?'Near Target':'Off Track';
+                    return ' '+pv+'%  ·  '+status;
+                  }
+                  return null;
+                }
+              }
+            }
+          },
+          scales:{
+            x:{
+              grid:{display:false},
+              border:{display:false},
+              ticks:{
+                font:{size:8.5},color:'#bbb',
+                maxRotation:45,autoSkip:true,maxTicksLimit:14
+              }
+            },
+            y:{
+              min:50,max:140,
+              grid:{color:'rgba(0,0,0,0.05)',drawBorder:false},
+              border:{display:false,dash:[4,4]},
+              ticks:{
+                font:{size:8.5},color:'#bbb',
+                callback:function(v){return v+'%';},
+                stepSize:10
+              }
+            }
+          }
+        }
+      });
+
+      /* draw 100% target line as plugin */
+      Chart.register({
+        id:'targetLine',
+        afterDraw:function(ch){
+          var yScale=ch.scales.y;
+          var xScale=ch.scales.x;
+          if(!yScale||!xScale) return;
+          var y=yScale.getPixelForValue(100);
+          var ctx2=ch.ctx;
+          ctx2.save();
+          ctx2.beginPath();
+          ctx2.strokeStyle='rgba(0,0,0,0.12)';
+          ctx2.lineWidth=1;
+          ctx2.setLineDash([6,4]);
+          ctx2.moveTo(xScale.left,y);
+          ctx2.lineTo(xScale.right,y);
+          ctx2.stroke();
+          ctx2.restore();
+          /* "100%" label */
+          ctx2.save();
+          ctx2.font='500 8.5px Inter,-apple-system,sans-serif';
+          ctx2.fillStyle='rgba(0,0,0,0.25)';
+          ctx2.textAlign='right';
+          ctx2.fillText('target 100%',xScale.right,y-4);
+          ctx2.restore();
+        }
+      });
+
+    } else {
+      chart.data.labels=labels;
+      chart.data.datasets[0].data=pcts;
+      chart.data.datasets[0].backgroundColor=barBg;
+      chart.data.datasets[0].borderColor=barBrd;
+      chart.data.datasets[1].data=pcts;
+      chart.data.datasets[1].pointBackgroundColor=ptBg;
+      chart.update('active');
+    }
+  }
+
+  /* ── process raw tableau data into sorted time series ── */
+  function process(rows,enc){
+    if(!enc.actual||!enc.budget||!enc.date) return [];
+
+    var points=[];
+    rows.forEach(function(row){
+      var aDv=row[enc.actual.name];
+      var bDv=row[enc.budget.name];
+      var dDv=row[enc.date.name];
+      if(!aDv||!bDv||!dDv) return;
+
+      var a=parseFloat(aDv.nativeValue!==undefined?aDv.nativeValue:aDv.value);
+      var b=parseFloat(bDv.nativeValue!==undefined?bDv.nativeValue:bDv.value);
+      if(isNaN(a)||isNaN(b)||b===0) return;
+
+      var pct=(a/b)*100;
+      /* label: use formattedValue from date field */
+      var lbl=dDv.formattedValue&&dDv.formattedValue!=='%null%'?dDv.formattedValue:String(dDv.value);
+      /* sort key: try native date value, else string */
+      var sortKey=dDv.nativeValue!==undefined?dDv.nativeValue:lbl;
+
+      points.push({label:lbl,pct:pct,actual:a,budget:b,sortKey:sortKey});
+    });
+
+    /* sort chronologically */
+    points.sort(function(a,b){
+      if(typeof a.sortKey==='number'&&typeof b.sortKey==='number') return a.sortKey-b.sortKey;
+      return String(a.sortKey).localeCompare(String(b.sortKey));
+    });
+
+    return points;
+  }
+
+  /* ── subtitle ── */
+  function makeSub(pts){
+    if(!pts.length) return '—';
+    return pts[0].label+' – '+pts[pts.length-1].label+' · '+pts.length+' months';
+  }
+
+  /* ── toggle buttons ── */
+  function setupToggles(){
+    document.querySelectorAll('.tgl').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        document.querySelectorAll('.tgl').forEach(function(b){b.classList.remove('on');});
+        btn.classList.add('on');
+        renderView(parseInt(btn.dataset.w,10));
+      });
+    });
+  }
+
+  /* ── smart default toggle based on data length ── */
+  function pickDefaultToggle(n){
+    var best='0'; /* all */
+    if(n<=3)  best='3';
+    else if(n<=6)  best='6';
+    else if(n<=12) best='12';
+    document.querySelectorAll('.tgl').forEach(function(b){
+      b.classList.remove('on');
+      if(b.dataset.w===best) b.classList.add('on');
+    });
+    return parseInt(best,10);
+  }
+
+  /* ── main update ── */
+  async function update(ws){
+    try{
+      var data=await getData(ws);
+      var enc =await getEnc(ws);
+      var pts =process(data,enc);
+
+      if(!pts.length){
+        $('ph').style.display='';
+        $('ui').style.display='none';
+        return;
+      }
+
+      $('ph').style.display='none';
+      $('ui').style.display='';
+
+      ALL_DATA=pts;
+      $('chart-sub').textContent=makeSub(pts);
+
+      var defW=pickDefaultToggle(pts.length);
+      renderView(defW);
+
+    }catch(e){
+      console.error('BudgetAchievement error:',e);
+    }
+  }
+
+  /* ── init ── */
+  window.onload=tableau.extensions.initializeAsync().then(function(){
+    var ws=tableau.extensions.worksheetContent.worksheet;
+    setupToggles();
+    ws.addEventListener(tableau.TableauEventType.SummaryDataChanged,function(){update(ws);});
+    update(ws);
+  });
+
+})();
+</script>
+</body>
+</html>
