@@ -8,153 +8,205 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
+/* ═══════════════════════════════════════════════════════════════
+   RESPONSIVE FOUNDATION
+   html font-size is set dynamically via JS (ResizeObserver).
+   Every measurement below uses rem so the whole UI scales
+   uniformly when the Tableau dashboard zone is resized.
+═══════════════════════════════════════════════════════════════ */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
 :root{
-  --page:#f0f0ec;--card:#fff;--bdr:rgba(0,0,0,0.07);--bdr2:rgba(0,0,0,0.05);
-  --t1:#0f0f0f;--t2:#5a5a5a;--t3:#aaa;--surf:#f6f6f3;--surf2:#efefeb;
-  --g:#639922;--gb:#eaf3de;--ghi:#1a3d08;--gm:#3b6d11;
-  --r:#e24b4a;--rb:#fcebeb;--rhi:#5c1515;--rm:#a32d2d;
-  --a:#ef9f27;--ab:#faeeda;--ahi:#633806;--am:#854f0b;
-  --blue:#378ADD;--bluedark:#185FA5;
+  --page:#f0f0ec;--card:#fff;
+  --bdr:rgba(0,0,0,0.07);--bdr2:rgba(0,0,0,0.05);
+  --t1:#0f0f0f;--t2:#5a5a5a;--t3:#aaa;
+  --surf:#f6f6f3;
+  --g:#639922;--gb:#eaf3de;--gm:#3b6d11;--ghi:#1a3d08;
+  --r:#e24b4a;--rb:#fcebeb;--rm:#a32d2d;--rhi:#5c1515;
+  --a:#ef9f27;--ab:#faeeda;--am:#854f0b;--ahi:#633806;
+  --blue:#378ADD;
+}
+
+html{
+  /* base size set by JS — default 13px so the page looks fine
+     even before JS fires */
+  font-size:13px;
 }
 html,body{
-  width:100%;height:100%;background:var(--page);
+  width:100%;height:100%;
+  background:var(--page);
   font-family:'Inter',-apple-system,sans-serif;
   display:flex;align-items:flex-start;justify-content:center;
   overflow:auto;
 }
-#app{width:calc(100% - 16px);max-width:900px;padding:10px 0 16px;}
 
+#app{
+  width:100%;
+  max-width:100%;
+  padding:0.5rem 0.5rem 1rem;
+}
+
+/* ── SHELL ── */
 .shell{
-  background:var(--card);border-radius:16px;
-  border:0.5px solid var(--bdr);overflow:hidden;
-  box-shadow:0 1px 3px rgba(0,0,0,0.04),0 6px 24px rgba(0,0,0,0.07);
+  background:var(--card);
+  border-radius:1rem;
+  border:0.5px solid var(--bdr);
+  overflow:hidden;
+  box-shadow:0 1px 3px rgba(0,0,0,0.04),0 0.4rem 1.6rem rgba(0,0,0,0.07);
   animation:rise .3s cubic-bezier(.22,.68,0,1.1) both;
 }
-@keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes rise{from{opacity:0;transform:translateY(0.4rem)}to{opacity:1;transform:none}}
 
 /* ── TOPBAR ── */
 .topbar{
   display:flex;justify-content:space-between;align-items:center;
-  padding:14px 18px 12px;gap:12px;flex-wrap:wrap;
+  padding:0.85rem 1.1rem 0.7rem;gap:0.6rem;flex-wrap:wrap;
   border-bottom:0.5px solid var(--bdr2);
 }
 .ttl-block .ttl{
-  font-size:10px;font-weight:600;letter-spacing:.09em;
-  text-transform:uppercase;color:var(--t2);margin-bottom:2px;
+  font-size:0.69rem;font-weight:600;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--t2);margin-bottom:0.15rem;
 }
-.ttl-block .sub{font-size:10px;color:var(--t3);}
-.right-ctrl{display:flex;align-items:center;gap:8px;}
+.ttl-block .sub{font-size:0.69rem;color:var(--t3);}
+.right-ctrl{display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;}
 
-/* view toggle: % vs absolute */
-.view-toggle{
-  display:flex;gap:2px;background:var(--surf);
-  border-radius:7px;padding:2px;
+/* ── TOGGLES ── */
+.view-toggle,.tgl-group{
+  display:flex;gap:0.12rem;
+  background:var(--surf);border-radius:0.45rem;padding:0.15rem;
 }
-.vtgl{
-  font-size:9.5px;font-weight:600;padding:3px 9px;border-radius:5px;
-  border:none;cursor:pointer;background:transparent;
-  color:var(--t3);font-family:inherit;transition:all .15s;
-}
-.vtgl.on{background:var(--card);color:var(--t1);box-shadow:0 1px 2px rgba(0,0,0,.08);}
-
-/* time toggles */
-.tgl-group{
-  display:flex;gap:2px;background:var(--surf);
-  border-radius:7px;padding:2px;
-}
-.tgl{
-  font-size:9.5px;font-weight:600;letter-spacing:.02em;
-  padding:3px 10px;border-radius:5px;border:none;
+.vtgl,.tgl{
+  font-size:0.69rem;font-weight:600;letter-spacing:.02em;
+  padding:0.22rem 0.65rem;border-radius:0.35rem;border:none;
   cursor:pointer;background:transparent;color:var(--t3);
-  font-family:inherit;transition:all .15s;
+  font-family:inherit;transition:all .15s;white-space:nowrap;
 }
-.tgl:hover{color:var(--t2);}
-.tgl.on{background:var(--card);color:var(--t1);box-shadow:0 1px 2px rgba(0,0,0,.08);}
+.vtgl:hover,.tgl:hover{color:var(--t2);}
+.vtgl.on,.tgl.on{
+  background:var(--card);color:var(--t1);
+  box-shadow:0 1px 2px rgba(0,0,0,.09);
+}
 
 /* ── KPI STRIP ── */
 .kpi-strip{
-  display:grid;grid-template-columns:repeat(5,minmax(0,1fr));
+  display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
   gap:0;border-bottom:0.5px solid var(--bdr2);
 }
 .kpi{
-  padding:11px 14px;border-right:0.5px solid var(--bdr2);
+  padding:0.65rem 0.85rem;
+  border-right:0.5px solid var(--bdr2);
+  border-left:0.18rem solid var(--bdr);
+  transition:border-color .2s;
 }
 .kpi:last-child{border-right:none;}
+.kpi.accent-g{border-left-color:var(--g);}
+.kpi.accent-r{border-left-color:var(--r);}
+.kpi.accent-a{border-left-color:var(--a);}
+.kpi.accent-b{border-left-color:var(--blue);}
+.kpi.accent-n{border-left-color:var(--bdr);}
 .kpi-l{
-  font-size:8px;font-weight:600;letter-spacing:.08em;
-  text-transform:uppercase;color:var(--t3);margin-bottom:5px;
+  font-size:0.6rem;font-weight:600;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--t3);margin-bottom:0.3rem;
 }
 .kpi-v{
-  font-size:19px;font-weight:600;color:var(--t1);
-  letter-spacing:-0.02em;line-height:1;margin-bottom:3px;
+  font-size:1.2rem;font-weight:600;color:var(--t1);
+  letter-spacing:-0.02em;line-height:1;margin-bottom:0.18rem;
 }
-.kpi-d{font-size:9px;font-weight:500;display:flex;align-items:center;gap:3px;}
-.kpi-d.g{color:var(--gm);} .kpi-d.r{color:var(--rm);} .kpi-d.a{color:var(--am);} .kpi-d.n{color:var(--t3);}
-/* accent left border on kpi */
-.kpi.accent-g{border-left:3px solid var(--g);}
-.kpi.accent-r{border-left:3px solid var(--r);}
-.kpi.accent-a{border-left:3px solid var(--a);}
-.kpi.accent-b{border-left:3px solid var(--blue);}
-.kpi.accent-n{border-left:3px solid var(--bdr);}
+.kpi-d{font-size:0.62rem;font-weight:500;}
+.kpi-d.g{color:var(--gm);}.kpi-d.r{color:var(--rm);}.kpi-d.a{color:var(--am);}.kpi-d.n{color:var(--t3);}
 
 /* ── CHART ── */
-.chart-wrap{padding:14px 16px 4px;position:relative;height:230px;}
-.chart-wrap canvas{border-radius:3px;}
+.chart-wrap{
+  padding:0.85rem 1rem 0.25rem;
+  /* height is set dynamically by JS */
+  position:relative;
+}
+.chart-wrap canvas{border-radius:0.2rem;}
 
 /* ── AXIS STRIP ── */
 .axis-strip{
   display:flex;justify-content:space-between;
-  padding:2px 16px 8px;font-size:8.5px;color:var(--t3);
+  padding:0.15rem 1rem 0.5rem;
+  font-size:0.6rem;color:var(--t3);
 }
 
-/* ── SPARKLINE ROW ── */
+/* ── SPARKBAR ROW ── */
 .spark-row{
-  display:grid;grid-template-columns:repeat(12,minmax(0,1fr));
-  gap:3px;padding:8px 16px 12px;
+  display:grid;
+  grid-template-columns:repeat(12,minmax(0,1fr));
+  gap:0.18rem;padding:0.5rem 1rem 0.75rem;
   border-top:0.5px solid var(--bdr2);
 }
 .spark-month{
-  display:flex;flex-direction:column;align-items:center;gap:2px;
-  cursor:default;
+  display:flex;flex-direction:column;align-items:center;gap:0.12rem;
 }
-.spark-bar-wrap{width:100%;height:28px;display:flex;align-items:flex-end;}
+.spark-bar-wrap{
+  width:100%;height:1.8rem;display:flex;align-items:flex-end;
+}
 .spark-bar{
-  width:100%;border-radius:2px 2px 0 0;
-  min-height:2px;transition:height .3s ease;
+  width:100%;border-radius:0.12rem 0.12rem 0 0;
+  min-height:0.12rem;transition:height .3s ease;
 }
-.spark-lbl{font-size:7.5px;color:var(--t3);text-align:center;line-height:1;}
-.spark-pct{font-size:7px;font-weight:600;text-align:center;}
+.spark-lbl{font-size:0.5rem;color:var(--t3);text-align:center;line-height:1;}
+.spark-pct{font-size:0.48rem;font-weight:600;text-align:center;}
 
 /* ── LEGEND ── */
 .legend{
-  display:flex;gap:14px;flex-wrap:wrap;align-items:center;
-  padding:9px 16px 12px;border-top:0.5px solid var(--bdr2);
+  display:flex;gap:0.85rem;flex-wrap:wrap;align-items:center;
+  padding:0.55rem 1rem 0.75rem;border-top:0.5px solid var(--bdr2);
 }
-.leg{display:flex;align-items:center;gap:5px;font-size:9.5px;color:var(--t2);}
-.leg-sq{width:8px;height:8px;border-radius:2px;flex-shrink:0;}
-.leg-ln{width:16px;height:2px;border-radius:2px;flex-shrink:0;}
+.leg{display:flex;align-items:center;gap:0.3rem;font-size:0.65rem;color:var(--t2);}
+.leg-sq{width:0.5rem;height:0.5rem;border-radius:0.12rem;flex-shrink:0;}
+.leg-ln{width:1rem;height:0.12rem;border-radius:0.12rem;flex-shrink:0;}
 
 /* ── PLACEHOLDER ── */
 #ph{
-  padding:48px 24px;text-align:center;
-  display:flex;flex-direction:column;align-items:center;gap:10px;
+  padding:3rem 1.5rem;text-align:center;
+  display:flex;flex-direction:column;align-items:center;gap:0.65rem;
 }
-#ph strong{font-size:12px;font-weight:600;color:var(--t2);}
-#ph p{font-size:11px;color:var(--t3);line-height:1.65;}
-.ph-tiles{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:6px;}
+#ph strong{font-size:0.85rem;font-weight:600;color:var(--t2);}
+#ph p{font-size:0.75rem;color:var(--t3);line-height:1.65;}
+.ph-tiles{display:flex;gap:0.4rem;flex-wrap:wrap;justify-content:center;margin-top:0.4rem;}
 .ph-tile{
   background:var(--surf);border:0.5px solid var(--bdr);
-  border-radius:6px;padding:3px 10px;
-  font-size:10px;font-weight:500;color:var(--t2);
+  border-radius:0.4rem;padding:0.2rem 0.65rem;
+  font-size:0.69rem;font-weight:500;color:var(--t2);
 }
+
+/* ══════════════════════════════════════════
+   BREAKPOINT OVERRIDES
+   Applied as data-size attribute on #app
+   by the ResizeObserver JS
+══════════════════════════════════════════ */
+
+/* Narrow: < 480px — stack controls, 3-col KPI */
+#app[data-size="xs"] .topbar{flex-direction:column;align-items:flex-start;}
+#app[data-size="xs"] .right-ctrl{flex-wrap:wrap;}
+#app[data-size="xs"] .kpi-strip{grid-template-columns:repeat(3,minmax(0,1fr));}
+#app[data-size="xs"] .kpi:nth-child(4),
+#app[data-size="xs"] .kpi:nth-child(5){border-top:0.5px solid var(--bdr2);}
+#app[data-size="xs"] .spark-row{grid-template-columns:repeat(6,minmax(0,1fr));}
+#app[data-size="xs"] .view-toggle .vtgl:first-child::after{content:'%';}
+#app[data-size="xs"] .view-toggle .vtgl:first-child{font-size:0;}
+#app[data-size="xs"] .view-toggle .vtgl:first-child::after{font-size:0.69rem;}
+
+/* Small: 480–640px — 4-col KPI */
+#app[data-size="sm"] .kpi-strip{grid-template-columns:repeat(4,minmax(0,1fr)) }
+#app[data-size="sm"] .kpi:nth-child(5){
+  grid-column:span 4;border-top:0.5px solid var(--bdr2);border-right:none;
+}
+
+/* Medium 640–800px — all 5 cols but tighter */
+#app[data-size="md"] .kpi-v{font-size:1rem;}
+
+/* Large 800px+ — full layout, nothing extra */
 </style>
 </head>
 <body>
 <div id="app">
 <div class="shell" id="shell">
 
-  <!-- placeholder -->
   <div id="ph">
     <svg width="44" height="44" viewBox="0 0 44 44" fill="none" style="opacity:.25">
       <rect x="2" y="2" width="40" height="40" rx="9" stroke="#666" stroke-width="1.5"/>
@@ -172,7 +224,6 @@ html,body{
     </div>
   </div>
 
-  <!-- main UI -->
   <div id="ui" style="display:none">
 
     <div class="topbar">
@@ -185,7 +236,7 @@ html,body{
           <button class="vtgl on" data-view="pct">% Attainment</button>
           <button class="vtgl" data-view="abs">Actual vs Budget</button>
         </div>
-        <div class="tgl-group" id="tgl-group">
+        <div class="tgl-group">
           <button class="tgl" data-w="3">3M</button>
           <button class="tgl" data-w="6">6M</button>
           <button class="tgl" data-w="12">1Y</button>
@@ -195,53 +246,29 @@ html,body{
       </div>
     </div>
 
-    <!-- KPI strip: 5 stats -->
     <div class="kpi-strip">
-      <div class="kpi accent-n" id="k0">
-        <div class="kpi-l">Avg attainment</div>
-        <div class="kpi-v" id="k0v">—</div>
-        <div class="kpi-d n" id="k0d"></div>
-      </div>
-      <div class="kpi accent-n" id="k1">
-        <div class="kpi-l">Months on track</div>
-        <div class="kpi-v" id="k1v">—</div>
-        <div class="kpi-d n" id="k1d"></div>
-      </div>
-      <div class="kpi accent-n" id="k2">
-        <div class="kpi-l">Best month</div>
-        <div class="kpi-v" id="k2v">—</div>
-        <div class="kpi-d a" id="k2d"></div>
-      </div>
-      <div class="kpi accent-n" id="k3">
-        <div class="kpi-l">Worst month</div>
-        <div class="kpi-v" id="k3v">—</div>
-        <div class="kpi-d r" id="k3d"></div>
-      </div>
-      <div class="kpi accent-n" id="k4">
-        <div class="kpi-l">Cumulative gap</div>
-        <div class="kpi-v" id="k4v">—</div>
-        <div class="kpi-d n" id="k4d"></div>
-      </div>
+      <div class="kpi accent-n" id="k0"><div class="kpi-l">Avg attainment</div><div class="kpi-v" id="k0v">—</div><div class="kpi-d n" id="k0d"></div></div>
+      <div class="kpi accent-n" id="k1"><div class="kpi-l">Months on track</div><div class="kpi-v" id="k1v">—</div><div class="kpi-d n" id="k1d"></div></div>
+      <div class="kpi accent-n" id="k2"><div class="kpi-l">Best month</div><div class="kpi-v" id="k2v">—</div><div class="kpi-d a" id="k2d"></div></div>
+      <div class="kpi accent-n" id="k3"><div class="kpi-l">Worst month</div><div class="kpi-v" id="k3v">—</div><div class="kpi-d r" id="k3d"></div></div>
+      <div class="kpi accent-n" id="k4"><div class="kpi-l">Cumulative gap</div><div class="kpi-v" id="k4v">—</div><div class="kpi-d n" id="k4d"></div></div>
     </div>
 
-    <!-- main chart -->
-    <div class="chart-wrap">
-      <canvas id="chart" role="img" aria-label="Budget achievement chart">Budget achievement over time.</canvas>
+    <div class="chart-wrap" id="chart-wrap">
+      <canvas id="chart" role="img" aria-label="Budget achievement over time">Budget achievement chart.</canvas>
     </div>
-    <div class="axis-strip">
-      <span id="ax-l"></span><span id="ax-r"></span>
-    </div>
+    <div class="axis-strip"><span id="ax-l"></span><span id="ax-r"></span></div>
 
-    <!-- mini monthly heatmap sparkbars (last 12 of window) -->
     <div class="spark-row" id="spark-row"></div>
 
-    <!-- legend -->
     <div class="legend">
       <div class="leg"><div class="leg-sq" style="background:#639922"></div>On/above target (≥100%)</div>
       <div class="leg"><div class="leg-sq" style="background:#ef9f27"></div>Near target (90–99%)</div>
       <div class="leg"><div class="leg-sq" style="background:#e24b4a"></div>Below target (&lt;90%)</div>
       <div class="leg"><div class="leg-ln" style="background:#378ADD"></div>Trend line</div>
-      <div class="leg" id="leg-budget" style="display:none"><div class="leg-ln" style="background:#aaa;border-top:1px dashed #aaa;height:0;width:16px"></div>Budget</div>
+      <div class="leg" id="leg-budget" style="display:none">
+        <div class="leg-ln" style="background:rgba(0,0,0,0.2);border-top:1px dashed rgba(0,0,0,0.2);height:0;width:1rem"></div>Budget
+      </div>
     </div>
 
   </div>
@@ -254,72 +281,117 @@ html,body{
 
   var $=function(id){return document.getElementById(id);};
   var chart=null;
-  var ALL=[]; /* full sorted dataset */
+  var ALL=[];
   var activeW=0;
-  var activeView='pct'; /* 'pct' or 'abs' */
+  var activeView='pct';
 
-  /* ── number format ── */
-  function fN(n,decimals){
+  /* ══════════════════════════════════════════
+     RESPONSIVE ENGINE
+     Watches #app width via ResizeObserver.
+     Sets html font-size proportionally so
+     all rem values scale together.
+     Also resizes the chart canvas.
+  ══════════════════════════════════════════ */
+  var BASE_WIDTH=800;   /* design reference width */
+  var MIN_FS=9;         /* minimum font-size px */
+  var MAX_FS=16;        /* maximum font-size px */
+  var appEl=$('app');
+
+  function applyScale(w){
+    /* clamp font-size between MIN and MAX */
+    var fs=Math.min(MAX_FS,Math.max(MIN_FS,Math.round((w/BASE_WIDTH)*13)));
+    document.documentElement.style.fontSize=fs+'px';
+
+    /* breakpoint attribute for CSS overrides */
+    var size=w<480?'xs':w<640?'sm':w<800?'md':'lg';
+    appEl.setAttribute('data-size',size);
+
+    /* chart height: 28% of container width, clamped */
+    var cw=$('chart-wrap');
+    if(cw){
+      var ch=Math.min(300,Math.max(120,Math.round(w*0.28)));
+      cw.style.height=ch+'px';
+    }
+
+    /* tell Chart.js to resize if it exists */
+    if(chart) chart.resize();
+
+    /* update chart tick font sizes to match current rem */
+    if(chart){
+      var tickFs=Math.max(7,Math.round(fs*0.69));
+      var ttFs  =Math.max(9,Math.round(fs*0.84));
+      chart.options.scales.x.ticks.font.size=tickFs;
+      chart.options.scales.y.ticks.font.size=tickFs;
+      chart.options.plugins.tooltip.titleFont.size=ttFs;
+      chart.options.plugins.tooltip.bodyFont.size =Math.max(8,Math.round(fs*0.76));
+      chart.update('none');
+    }
+  }
+
+  /* ResizeObserver — fires whenever the zone changes size */
+  if(window.ResizeObserver){
+    new ResizeObserver(function(entries){
+      var w=entries[0].contentRect.width;
+      applyScale(w);
+    }).observe(appEl);
+  }
+  /* also handle window resize as fallback */
+  window.addEventListener('resize',function(){
+    applyScale(appEl.offsetWidth||window.innerWidth);
+  });
+
+  /* initial scale on load */
+  function initScale(){
+    applyScale(appEl.offsetWidth||window.innerWidth);
+  }
+
+  /* ══════════════════════════════════════════
+     NUMBER HELPERS
+  ══════════════════════════════════════════ */
+  function fN(n){
     if(n===null||isNaN(n)) return '—';
-    var d=decimals!==undefined?decimals:0;
     var abs=Math.abs(n),s=n<0?'-':'';
     if(abs>=1e9)  return s+(abs/1e9).toFixed(2)+'B';
     if(abs>=1e6)  return s+(abs/1e6).toFixed(2)+'M';
     if(abs>=1000) return s+Math.round(abs).toLocaleString('en-US');
-    return s+abs.toFixed(d);
+    return s+abs.toFixed(0);
   }
   function p1(n){return Math.round(n*10)/10;}
 
   /* ── insight colour ── */
-  function insClr(pct){
-    return pct>=100?{solid:'#639922',bg:'rgba(99,153,34,',cls:'g'}
-          :pct>=90 ?{solid:'#ef9f27',bg:'rgba(239,159,39,',cls:'a'}
-                   :{solid:'#e24b4a',bg:'rgba(226,75,74,',cls:'r'};
+  function ic(pct){
+    return pct>=100?{s:'#639922',bg:'rgba(99,153,34,',c:'g'}
+          :pct>=90 ?{s:'#ef9f27',bg:'rgba(239,159,39,',c:'a'}
+                   :{s:'#e24b4a',bg:'rgba(226,75,74,', c:'r'};
   }
 
-  /* ── parse date from formattedValue (e.g. "March 2023", "Mar 2023", "2023-03-01") ── */
-  var MONTHS_LONG =['january','february','march','april','may','june','july','august','september','october','november','december'];
-  var MONTHS_SHORT=['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
-
+  /* ── date parsing ── */
+  var ML=['january','february','march','april','may','june','july','august','september','october','november','december'];
+  var MS=['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
   function parseDate(str){
     if(!str||str==='%null%'||str==='Null') return null;
     var s=str.trim();
-
-    /* ISO: 2023-03-01 or 2023-03 */
     var iso=s.match(/^(\d{4})-(\d{2})/);
     if(iso) return new Date(parseInt(iso[1]),parseInt(iso[2])-1,1);
-
-    /* "March 2023" or "Mar 2023" */
-    var parts=s.split(/[\s,]+/);
-    if(parts.length>=2){
-      var mStr=parts[0].toLowerCase();
-      var yStr=parts[parts.length-1];
-      var mi=MONTHS_LONG.indexOf(mStr);
-      if(mi<0) mi=MONTHS_SHORT.indexOf(mStr.slice(0,3));
-      var yr=parseInt(yStr);
+    var pts=s.split(/[\s,]+/);
+    if(pts.length>=2){
+      var ms=pts[0].toLowerCase();
+      var mi=ML.indexOf(ms); if(mi<0) mi=MS.indexOf(ms.slice(0,3));
+      var yr=parseInt(pts[pts.length-1]);
       if(mi>=0&&!isNaN(yr)) return new Date(yr,mi,1);
     }
-
-    /* "Q1 2023" */
     var qm=s.match(/Q(\d)\s+(\d{4})/i);
     if(qm) return new Date(parseInt(qm[2]),(parseInt(qm[1])-1)*3,1);
-
-    /* fallback: let JS parse */
     var d=new Date(s);
     return isNaN(d.getTime())?null:d;
   }
-
-  function dateToNum(d){
-    return d?d.getFullYear()*100+d.getMonth():0;
-  }
-
-  function shortLabel(d){
-    if(!d) return '?';
+  function d2n(d){return d?d.getFullYear()*100+d.getMonth():0;}
+  function shortLbl(d){
     var M=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    return M[d.getMonth()]+' '+String(d.getFullYear()).slice(2);
+    return d?M[d.getMonth()]+' '+String(d.getFullYear()).slice(2):'?';
   }
 
-  /* ── data reading — confirmed working pattern ── */
+  /* ── data reading ── */
   async function getData(ws){
     var rows=[],rdr=await ws.getSummaryDataReaderAsync(undefined,{ignoreSelection:true});
     for(var i=0;i<rdr.pageCount;i++){
@@ -342,293 +414,181 @@ html,body{
     return map;
   }
 
-  /* ── process rows into sorted time series ── */
   function process(rows,enc){
     if(!enc.actual||!enc.budget||!enc.date) return [];
     var pts=[];
-
     rows.forEach(function(row){
-      var aDv=row[enc.actual.name];
-      var bDv=row[enc.budget.name];
-      var dDv=row[enc.date.name];
+      var aDv=row[enc.actual.name],bDv=row[enc.budget.name],dDv=row[enc.date.name];
       if(!aDv||!bDv||!dDv) return;
-
       var a=parseFloat(aDv.nativeValue!==undefined?aDv.nativeValue:aDv.value);
       var b=parseFloat(bDv.nativeValue!==undefined?bDv.nativeValue:bDv.value);
       if(isNaN(a)||isNaN(b)||b===0) return;
-
-      /* try to get date from nativeValue first (Tableau stores as ms epoch for dates) */
       var dateObj=null;
-      if(dDv.nativeValue!==undefined&&dDv.nativeValue!==null&&typeof dDv.nativeValue==='number'){
-        dateObj=new Date(dDv.nativeValue);
-        if(isNaN(dateObj.getTime())) dateObj=null;
-      }
-      /* fallback: parse formattedValue string */
-      if(!dateObj){
-        var fv=dDv.formattedValue!==undefined?dDv.formattedValue:String(dDv.value);
-        dateObj=parseDate(fv);
-      }
+      if(typeof dDv.nativeValue==='number'){dateObj=new Date(dDv.nativeValue);if(isNaN(dateObj.getTime()))dateObj=null;}
+      if(!dateObj){var fv=dDv.formattedValue&&dDv.formattedValue!=='%null%'?dDv.formattedValue:String(dDv.value);dateObj=parseDate(fv);}
       if(!dateObj) return;
-
-      var pct=(a/b)*100;
-      var label=shortLabel(dateObj);
-      /* full label for tooltip */
-      var fullLabel=dDv.formattedValue&&dDv.formattedValue!=='%null%'?dDv.formattedValue:label;
-
-      pts.push({
-        date:dateObj,
-        num:dateToNum(dateObj),
-        label:label,
-        fullLabel:fullLabel,
-        pct:p1(pct),
-        actual:a,
-        budget:b,
-        gap:a-b
-      });
+      var pct=p1((a/b)*100);
+      var fv2=dDv.formattedValue&&dDv.formattedValue!=='%null%'?dDv.formattedValue:shortLbl(dateObj);
+      pts.push({date:dateObj,num:d2n(dateObj),label:shortLbl(dateObj),fullLabel:fv2,pct:pct,actual:a,budget:b,gap:a-b});
     });
-
-    /* deduplicate by num (same month) — keep latest */
     var seen={};
-    pts.forEach(function(p){
-      if(!seen[p.num]||p.date>seen[p.num].date) seen[p.num]=p;
-    });
-    var unique=Object.values(seen);
-
-    /* sort chronologically */
-    unique.sort(function(a,b){return a.num-b.num;});
-    return unique;
+    pts.forEach(function(p){if(!seen[p.num]||p.date>seen[p.num].date)seen[p.num]=p;});
+    var u=Object.values(seen);
+    u.sort(function(a,b){return a.num-b.num;});
+    return u;
   }
 
-  /* ── slice data for window ── */
-  function slice(w){
-    return w===0?ALL:ALL.slice(Math.max(0,ALL.length-w));
-  }
+  function slice(w){return w===0?ALL:ALL.slice(Math.max(0,ALL.length-w));}
 
-  /* ── update KPI strip ── */
+  /* ── KPI strip ── */
   function updateKPIs(d){
     var pcts=d.map(function(x){return x.pct;});
     var avg=pcts.reduce(function(s,v){return s+v;},0)/pcts.length;
     var hits=pcts.filter(function(v){return v>=100;}).length;
-    var best=Math.max.apply(null,pcts);
-    var worst=Math.min.apply(null,pcts);
-    var bestIdx=pcts.indexOf(best);
-    var worstIdx=pcts.indexOf(worst);
+    var best=Math.max.apply(null,pcts),worst=Math.min.apply(null,pcts);
+    var bi=pcts.indexOf(best),wi=pcts.indexOf(worst);
     var cumGap=d.reduce(function(s,x){return s+x.gap;},0);
-
-    /* k0: avg attainment */
-    var ac=insClr(avg);
-    $('k0').className='kpi accent-'+ac.cls;
+    var ac=ic(avg),hc=hits/d.length>=0.7?'g':hits/d.length>=0.5?'a':'r';
+    $('k0').className='kpi accent-'+ac.c;
     $('k0v').textContent=p1(avg)+'%';
     $('k0d').textContent=(avg>=100?'▲ above':'▼ below')+' 100% target';
-    $('k0d').className='kpi-d '+ac.cls;
-
-    /* k1: hit rate */
-    var hRate=hits/d.length;
-    var hCls=hRate>=0.7?'g':hRate>=0.5?'a':'r';
-    $('k1').className='kpi accent-'+hCls;
+    $('k0d').className='kpi-d '+ac.c;
+    $('k1').className='kpi accent-'+hc;
     $('k1v').textContent=hits+' / '+d.length;
-    $('k1d').textContent=Math.round(hRate*100)+'% hit rate';
-    $('k1d').className='kpi-d '+hCls;
-
-    /* k2: best */
+    $('k1d').textContent=Math.round((hits/d.length)*100)+'% hit rate';
+    $('k1d').className='kpi-d '+hc;
     $('k2').className='kpi accent-g';
     $('k2v').textContent=p1(best)+'%';
-    $('k2d').textContent=bestIdx>=0?d[bestIdx].label:'—';
+    $('k2d').textContent=bi>=0?d[bi].label:'—';
     $('k2d').className='kpi-d a';
-
-    /* k3: worst */
     $('k3').className='kpi accent-r';
     $('k3v').textContent=p1(worst)+'%';
-    $('k3d').textContent=worstIdx>=0?d[worstIdx].label:'—';
+    $('k3d').textContent=wi>=0?d[wi].label:'—';
     $('k3d').className='kpi-d r';
-
-    /* k4: cumulative gap */
-    var gapCls=cumGap>=0?'g':'r';
-    $('k4').className='kpi accent-'+gapCls;
+    var gc=cumGap>=0?'g':'r';
+    $('k4').className='kpi accent-'+gc;
     $('k4v').textContent=(cumGap>=0?'+':'')+fN(cumGap);
     $('k4d').textContent=cumGap>=0?'above budget total':'below budget total';
-    $('k4d').className='kpi-d '+gapCls;
+    $('k4d').className='kpi-d '+gc;
   }
 
-  /* ── sparkbar mini row (last 12 months of window) ── */
+  /* ── sparkbars ── */
   function updateSparks(d){
-    var recent=d.slice(Math.max(0,d.length-12));
-    var container=$('spark-row');
-    container.innerHTML='';
-    var maxPct=Math.max.apply(null,recent.map(function(x){return x.pct;}));
+    var w=appEl.getAttribute('data-size');
+    var cols=w==='xs'?6:12;
+    var recent=d.slice(Math.max(0,d.length-cols));
+    var cont=$('spark-row');
+    cont.innerHTML='';
+    cont.style.gridTemplateColumns='repeat('+cols+',minmax(0,1fr))';
+    var mx=Math.max.apply(null,recent.map(function(x){return x.pct;}));
     recent.forEach(function(pt){
-      var c=insClr(pt.pct);
-      var h=Math.max(4,Math.round((pt.pct/maxPct)*28));
+      var c=ic(pt.pct);
+      var barH=Math.max(4,Math.round((pt.pct/mx)*100));
       var div=document.createElement('div');
       div.className='spark-month';
       div.title=pt.fullLabel+': '+pt.pct+'%';
       div.innerHTML=
-        '<div class="spark-bar-wrap"><div class="spark-bar" style="height:'+h+'px;background:'+c.solid+'20;border-top:2px solid '+c.solid+'"></div></div>'+
+        '<div class="spark-bar-wrap"><div class="spark-bar" style="height:'+barH+'%;background:'+c.bg+'0.15);border-top:2px solid '+c.s+'"></div></div>'+
         '<div class="spark-lbl">'+pt.label.split(' ')[0]+'</div>'+
-        '<div class="spark-pct" style="color:'+c.solid+'">'+pt.pct+'%</div>';
-      container.appendChild(div);
+        '<div class="spark-pct" style="color:'+c.s+'">'+pt.pct+'%</div>';
+      cont.appendChild(div);
     });
   }
 
-  /* ── draw / update Chart.js ── */
+  /* ── chart ── */
   function drawChart(d){
+    var isPct=activeView==='pct';
     var labels=d.map(function(x){return x.label;});
     var pcts  =d.map(function(x){return x.pct;});
     var actuals=d.map(function(x){return x.actual;});
     var budgets=d.map(function(x){return x.budget;});
+    var barVals=isPct?pcts:actuals;
+    var barBg  =pcts.map(function(p){return ic(p).bg+'0.15)';});
+    var barBrd =pcts.map(function(p){return ic(p).bg+'0.55)';});
+    var ptBg   =pcts.map(function(p){return ic(p).s;});
 
-    var isPct=activeView==='pct';
-
-    var barVals  =isPct?pcts:actuals;
-    var barBg    =pcts.map(function(p){return insClr(p).bg+'0.15)';});
-    var barBrd   =pcts.map(function(p){return insClr(p).bg+'0.6)';});
-    var ptBg     =pcts.map(function(p){return insClr(p).solid;});
-
-    /* axis range */
     var yMin,yMax,stepSize;
     if(isPct){
-      var minP=Math.min.apply(null,pcts);
-      yMin=Math.max(0,Math.floor((minP-10)/10)*10);
+      yMin=Math.max(0,Math.floor((Math.min.apply(null,pcts)-10)/10)*10);
       yMax=Math.ceil((Math.max.apply(null,pcts)+10)/10)*10;
       stepSize=10;
     } else {
-      var allVals=actuals.concat(budgets);
-      var dMin=Math.min.apply(null,allVals);
-      var dMax=Math.max.apply(null,allVals);
-      var pad=(dMax-dMin)*0.1||dMax*0.1;
-      yMin=Math.max(0,Math.floor(dMin-pad));
-      yMax=Math.ceil(dMax+pad);
-      stepSize=null;
+      var av=actuals.concat(budgets),dMin=Math.min.apply(null,av),dMax=Math.max.apply(null,av),pad=(dMax-dMin)*0.1||dMax*0.1;
+      yMin=Math.max(0,Math.floor(dMin-pad));yMax=Math.ceil(dMax+pad);stepSize=null;
     }
 
-    /* axis labels */
     $('ax-l').textContent=labels[0]||'';
     $('ax-r').textContent=labels[labels.length-1]||'';
     $('leg-budget').style.display=isPct?'none':'flex';
 
+    /* current font size for chart ticks */
+    var fs=parseInt(document.documentElement.style.fontSize)||13;
+    var tickFs=Math.max(7,Math.round(fs*0.69));
+    var ttFs  =Math.max(9,Math.round(fs*0.84));
+
     if(!chart){
       var ctx=$('chart').getContext('2d');
       chart=new Chart(ctx,{
-        data:{
-          labels:labels,
-          datasets:[
-            {
-              type:'bar',
-              label:'Value',
-              data:barVals,
-              backgroundColor:barBg,
-              borderColor:barBrd,
-              borderWidth:1,
-              borderRadius:5,
-              borderSkipped:false,
-              yAxisID:'y',order:3
-            },
-            {
-              type:'line',
-              label:'Trend',
-              data:pcts,
-              borderColor:'#378ADD',
-              borderWidth:2,
-              pointBackgroundColor:ptBg,
-              pointRadius:3.5,
-              pointHoverRadius:5,
-              pointBorderColor:'#fff',
-              pointBorderWidth:1.5,
-              tension:0.35,
-              fill:false,
-              yAxisID:isPct?'y':'y2',
-              order:1
-            },
-            {
-              type:'line',
-              label:'Budget',
-              data:budgets,
-              borderColor:'rgba(0,0,0,0.15)',
-              borderWidth:1.5,
-              borderDash:[5,4],
-              pointRadius:0,
-              fill:false,
-              yAxisID:'y',
-              order:2,
-              hidden:isPct
-            }
-          ]
-        },
+        data:{labels:labels,datasets:[
+          {type:'bar',label:'Value',data:barVals,backgroundColor:barBg,borderColor:barBrd,
+           borderWidth:1,borderRadius:4,borderSkipped:false,yAxisID:'y',order:3},
+          {type:'line',label:'Trend',data:pcts,borderColor:'#378ADD',borderWidth:2,
+           pointBackgroundColor:ptBg,pointRadius:3,pointHoverRadius:4.5,
+           pointBorderColor:'#fff',pointBorderWidth:1.5,tension:0.35,fill:false,
+           yAxisID:isPct?'y':'y2',order:1},
+          {type:'line',label:'Budget',data:budgets,borderColor:'rgba(0,0,0,0.15)',
+           borderWidth:1.5,borderDash:[5,4],pointRadius:0,fill:false,
+           yAxisID:'y',order:2,hidden:isPct}
+        ]},
         options:{
           responsive:true,maintainAspectRatio:false,
           interaction:{mode:'index',intersect:false},
           plugins:{
             legend:{display:false},
             tooltip:{
-              backgroundColor:'rgba(10,10,10,0.88)',
+              backgroundColor:'rgba(10,10,10,0.9)',
               titleColor:'#fff',bodyColor:'rgba(255,255,255,0.75)',
-              titleFont:{size:11,weight:'600',family:'Inter'},
-              bodyFont:{size:10,family:'Inter'},
-              padding:11,cornerRadius:9,
+              titleFont:{size:ttFs,weight:'600',family:'Inter'},
+              bodyFont:{size:Math.max(8,Math.round(fs*0.76)),family:'Inter'},
+              padding:10,cornerRadius:8,
               callbacks:{
                 title:function(items){return items[0].label;},
-                label:function(ctx){
-                  if(ctx.datasetIndex===0){
-                    var p=d[ctx.dataIndex]?d[ctx.dataIndex].pct:null;
-                    if(isPct) return ' Attainment: '+ctx.raw+'%  '+(ctx.raw>=100?'✓ On Track':ctx.raw>=90?'~ Near':'✗ Below');
-                    return ' Actual: '+fN(ctx.raw)+'  ('+p+'%)';
+                label:function(ctx2){
+                  if(ctx2.datasetIndex===0){
+                    var p=d[ctx2.dataIndex]?d[ctx2.dataIndex].pct:null;
+                    if(isPct) return ' '+ctx2.raw+'%  '+(ctx2.raw>=100?'✓ On Track':ctx2.raw>=90?'~ Near Target':'✗ Below');
+                    return ' Actual: '+fN(ctx2.raw)+(p?' ('+p+'%)':'');
                   }
-                  if(ctx.datasetIndex===1&&!isPct) return ' Trend: '+ctx.raw+'%';
-                  if(ctx.datasetIndex===2) return ' Budget: '+fN(ctx.raw);
+                  if(ctx2.datasetIndex===1&&!isPct) return ' Trend: '+ctx2.raw+'%';
+                  if(ctx2.datasetIndex===2) return ' Budget: '+fN(ctx2.raw);
                   return null;
                 }
               }
             }
           },
           scales:{
-            x:{
-              grid:{display:false},
-              border:{display:false},
-              ticks:{font:{size:9},color:'#bbb',maxRotation:45,autoSkip:true,maxTicksLimit:16}
-            },
-            y:{
-              min:yMin,max:yMax,
-              grid:{color:'rgba(0,0,0,0.045)',drawBorder:false},
-              border:{display:false},
-              ticks:{
-                font:{size:9},color:'#bbb',
-                callback:function(v){return isPct?v+'%':fN(v);},
-                stepSize:stepSize
-              }
-            },
-            y2:{
-              display:false,
-              min:yMin,max:yMax
-            }
+            x:{grid:{display:false},border:{display:false},ticks:{font:{size:tickFs},color:'#bbb',maxRotation:45,autoSkip:true,maxTicksLimit:16}},
+            y:{min:yMin,max:yMax,grid:{color:'rgba(0,0,0,0.04)',drawBorder:false},border:{display:false},
+               ticks:{font:{size:tickFs},color:'#bbb',callback:function(v){return isPct?v+'%':fN(v);},stepSize:stepSize}},
+            y2:{display:false,min:yMin,max:yMax}
           }
         }
       });
-
-      /* 100% dashed target line plugin */
       Chart.register({
         id:'tLine',
         afterDraw:function(ch){
           if(activeView!=='pct') return;
-          var ys=ch.scales.y,xs=ch.scales.x;
-          if(!ys||!xs) return;
-          var yp=ys.getPixelForValue(100);
-          var c2=ch.ctx;
+          var ys=ch.scales.y,xs=ch.scales.x;if(!ys||!xs) return;
+          var yp=ys.getPixelForValue(100),c2=ch.ctx;
+          var lfs=parseInt(document.documentElement.style.fontSize)||13;
           c2.save();
-          c2.beginPath();
-          c2.strokeStyle='rgba(0,0,0,0.1)';
-          c2.lineWidth=1;
-          c2.setLineDash([6,4]);
-          c2.moveTo(xs.left,yp);
-          c2.lineTo(xs.right,yp);
-          c2.stroke();
-          c2.font='500 8.5px Inter,sans-serif';
-          c2.fillStyle='rgba(0,0,0,0.22)';
-          c2.textAlign='right';
-          c2.fillText('target 100%',xs.right,yp-4);
-          c2.restore();
+          c2.beginPath();c2.strokeStyle='rgba(0,0,0,0.1)';c2.lineWidth=1;
+          c2.setLineDash([6,4]);c2.moveTo(xs.left,yp);c2.lineTo(xs.right,yp);c2.stroke();
+          c2.font='500 '+Math.max(8,Math.round(lfs*0.65))+'px Inter,sans-serif';
+          c2.fillStyle='rgba(0,0,0,0.22)';c2.textAlign='right';
+          c2.fillText('target 100%',xs.right,yp-4);c2.restore();
         }
       });
-
     } else {
       chart.data.labels=labels;
       chart.data.datasets[0].data=barVals;
@@ -639,84 +599,63 @@ html,body{
       chart.data.datasets[1].yAxisID=isPct?'y':'y2';
       chart.data.datasets[2].data=budgets;
       chart.data.datasets[2].hidden=isPct;
-      chart.options.scales.y.min=yMin;
-      chart.options.scales.y.max=yMax;
+      chart.options.scales.y.min=yMin;chart.options.scales.y.max=yMax;
       chart.options.scales.y.ticks.callback=function(v){return isPct?v+'%':fN(v);};
       chart.options.scales.y.ticks.stepSize=stepSize||undefined;
-      chart.options.scales.y2.min=yMin;
-      chart.options.scales.y2.max=yMax;
+      chart.options.scales.y2.min=yMin;chart.options.scales.y2.max=yMax;
+      chart.options.scales.x.ticks.font.size=tickFs;
+      chart.options.scales.y.ticks.font.size=tickFs;
+      chart.options.plugins.tooltip.titleFont.size=ttFs;
       chart.update('active');
     }
   }
 
-  /* ── full render for a window ── */
+  /* ── render view ── */
   function renderView(w,view){
-    activeW=w; if(view) activeView=view;
-    var d=slice(w);
-    if(!d.length) return;
+    activeW=w;if(view) activeView=view;
+    var d=slice(w);if(!d.length) return;
     $('chart-sub').textContent=d[0].label+' – '+d[d.length-1].label+'  ·  '+d.length+' months';
-    updateKPIs(d);
-    drawChart(d);
-    updateSparks(d);
+    updateKPIs(d);drawChart(d);updateSparks(d);
   }
 
-  /* ── smart default toggle ── */
   function pickDefault(n){
     var best='0';
-    if(n<=6) best='6'; else if(n<=12) best='12';
-    document.querySelectorAll('.tgl').forEach(function(b){
-      b.classList.remove('on');
-      if(b.dataset.w===best) b.classList.add('on');
-    });
+    if(n<=6) best='6';else if(n<=12) best='12';
+    document.querySelectorAll('.tgl').forEach(function(b){b.classList.remove('on');if(b.dataset.w===best)b.classList.add('on');});
     return parseInt(best,10);
   }
 
-  /* ── wire toggles ── */
   function wireToggles(){
     document.querySelectorAll('.tgl').forEach(function(btn){
       btn.addEventListener('click',function(){
         document.querySelectorAll('.tgl').forEach(function(b){b.classList.remove('on');});
-        btn.classList.add('on');
-        renderView(parseInt(btn.dataset.w,10));
+        btn.classList.add('on');renderView(parseInt(btn.dataset.w,10));
       });
     });
     document.querySelectorAll('.vtgl').forEach(function(btn){
       btn.addEventListener('click',function(){
         document.querySelectorAll('.vtgl').forEach(function(b){b.classList.remove('on');});
-        btn.classList.add('on');
-        renderView(activeW,btn.dataset.view);
+        btn.classList.add('on');renderView(activeW,btn.dataset.view);
       });
     });
   }
 
-  /* ── main update ── */
   async function update(ws){
     try{
-      var data=await getData(ws);
-      var enc =await getEnc(ws);
-      var pts =process(data,enc);
-
-      if(!pts.length){
-        $('ph').style.display='';
-        $('ui').style.display='none';
-        return;
-      }
-      $('ph').style.display='none';
-      $('ui').style.display='';
+      var data=await getData(ws),enc=await getEnc(ws),pts=process(data,enc);
+      if(!pts.length){$('ph').style.display='';$('ui').style.display='none';return;}
+      $('ph').style.display='none';$('ui').style.display='';
       ALL=pts;
-
+      initScale();
       var defW=pickDefault(pts.length);
       renderView(defW,'pct');
-
-    }catch(e){
-      console.error('BudgetAchievement:',e);
-    }
+    }catch(e){console.error('BudgetAchievement:',e);}
   }
 
-  /* ── init ── */
   window.onload=tableau.extensions.initializeAsync().then(function(){
     var ws=tableau.extensions.worksheetContent.worksheet;
     wireToggles();
+    initScale();
     ws.addEventListener(tableau.TableauEventType.SummaryDataChanged,function(){update(ws);});
     update(ws);
   });
